@@ -1,6 +1,6 @@
-import email
 import os
 import re
+import email
 import email.header
 
 def decode_mime_words(s):
@@ -17,13 +17,11 @@ def extract_attachment(part, folder_path):
     else:
         return None
 
-def parse_eml(eml_path, attachment_folder):
-    with open(eml_path, 'rb') as f:
+def parse_eml_file(eml_file, attachment_folder):
+    with open(eml_file, 'rb') as f:
         msg = email.message_from_bytes(f.read())
     
-    subject = msg.get('Subject', '')
     sender = msg.get('From', '')
-    recipient = msg.get('To', '')
     
     body = ''
     attachments = []
@@ -31,39 +29,32 @@ def parse_eml(eml_path, attachment_folder):
     for part in msg.walk():
         if part.get_content_type() == 'text/plain':
             body += part.get_payload(decode=True).decode('utf-8', 'ignore')
-        elif part.get_content_type() == 'text/html':
-            # You can handle HTML content similarly if needed
-            pass
         elif part.get_content_type().startswith('multipart'):
-            # Skip multipart content
             continue
         elif part.get('Content-Disposition') is not None:
             attachments.append(extract_attachment(part, attachment_folder))
     
-    # Extracting sender's email from sender string
     sender_email = re.search(r'<([^>]+)>', sender)
     if sender_email:
         sender = sender_email.group(1)
 
-    return {
-        'subject': subject,
-        'sender': sender,
-        'recipient': recipient,
-        'body': body,
-        'attachments': attachments
-    }
+    return sender, body, attachments
+
+def parse_eml_folder(folder_path, attachment_folder):
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.eml'):
+            eml_file = os.path.join(folder_path, filename)
+            txt_filename = os.path.splitext(filename)[0] + '.txt'
+            txt_filepath = os.path.join(attachment_folder, txt_filename)
+            sender, body, _ = parse_eml_file(eml_file, attachment_folder)
+            with open(txt_filepath, 'w', encoding='utf-8') as txt_file:
+                txt_file.write(body)
+            print(f"Processed {filename} and saved to {txt_filepath}")
 
 # Usage example
 if __name__ == "__main__":
-    eml_path = r'D:\test\messages\00000.eml'  # eml 파일 경로
+    eml_folder = r'D:\test\messages'  # EML 파일이 있는 폴더 경로
     attachment_folder = r'D:\test\results'  # 첨부 파일을 저장할 폴더 경로
 
-    # eml 파일 파싱
-    parsed_data = parse_eml(eml_path, attachment_folder)
-    
-    # 결과 출력
-    print("Subject:", parsed_data['subject'])
-    print("Sender:", parsed_data['sender'])
-    print("Recipient:", parsed_data['recipient'])
-    print("Body:", parsed_data['body'])
-    print("Attachments:", parsed_data['attachments'])
+    # EML 파일들을 파싱하고 텍스트 파일로 저장
+    parse_eml_folder(eml_folder, attachment_folder)

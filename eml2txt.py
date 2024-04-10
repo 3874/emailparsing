@@ -22,8 +22,10 @@ def parse_eml_file(eml_file, attachment_folder):
         msg = email.message_from_bytes(f.read())
     
     sender = msg.get('From', '')
+    receiver = msg.get('To', '')
+    date = msg.get('Date', '')
     
-    body = ''
+    body = f"Sender: {sender}\nReceiver: {receiver}\nDate: {date}\n\n"
     attachments = []
 
     for part in msg.walk():
@@ -34,11 +36,7 @@ def parse_eml_file(eml_file, attachment_folder):
         elif part.get('Content-Disposition') is not None:
             attachments.append(extract_attachment(part, attachment_folder))
     
-    sender_email = re.search(r'<([^>]+)>', sender)
-    if sender_email:
-        sender = sender_email.group(1)
-
-    return sender, body, attachments
+    return body, attachments
 
 def parse_eml_folder(folder_path, attachment_folder):
     for filename in os.listdir(folder_path):
@@ -46,7 +44,7 @@ def parse_eml_folder(folder_path, attachment_folder):
             eml_file = os.path.join(folder_path, filename)
             txt_filename = os.path.splitext(filename)[0] + '.txt'
             txt_filepath = os.path.join(attachment_folder, txt_filename)
-            sender, body, _ = parse_eml_file(eml_file, attachment_folder)
+            body, _ = parse_eml_file(eml_file, attachment_folder)
             with open(txt_filepath, 'w', encoding='utf-8') as txt_file:
                 txt_file.write(body)
             print(f"Processed {filename} and saved to {txt_filepath}")

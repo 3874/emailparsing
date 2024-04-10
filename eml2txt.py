@@ -51,8 +51,8 @@ def parse_eml_folder(folder_path, attachment_folder):
 
 # Usage example
 if __name__ == "__main__":
-    eml_folder = r'D:\test\messages'  # EML 파일이 있는 폴더 경로
-    attachment_folder = r'D:\test\results'  # 첨부 파일을 저장할 폴더 경로
+    eml_folder = r'C:\JFT\messages'  # EML 파일이 있는 폴더 경로
+    attachment_folder = r'C:\JFT\results'  # 첨부 파일을 저장할 폴더 경로
 
     # EML 파일들을 파싱하고 텍스트 파일로 저장
     parse_eml_folder(eml_folder, attachment_folder)
